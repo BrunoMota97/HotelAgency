@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Editar quarto{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h4 class="mb-3">Editar quarto</h4>
+            <form method="POST" action="{{ url_for('admin.update_room', room_id=room.id) }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label for="numero" class="form-label">Número do quarto</label>
+                    <input id="numero" type="text" name="numero" class="form-control" value="{{ room.numero }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="tipo" class="form-label">Tipo de quarto</label>
+                    <select id="tipo" name="tipo" class="form-select" required>
+                        <option value="singular" {{ 'selected' if room.tipo == 'singular' else '' }}>Singular</option>
+                        <option value="casal" {{ 'selected' if room.tipo == 'casal' else '' }}>Casal</option>
+                        <option value="suite" {{ 'selected' if room.tipo == 'suite' else '' }}>Suite</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="preco" class="form-label">Preço</label>
+                    <input id="preco" type="number" step="0.01" min="0" name="preco" class="form-control" value="{{ room.preco_base }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="descricao" class="form-label">Descrição</label>
+                    <textarea id="descricao" name="descricao" class="form-control" rows="3">{{ room.descricao or '' }}</textarea>
+                </div>
+
+                 <div class="mb-3">
+                <label for="imagem">Nova imagem:</label>
+                <input type="file" id="imagem" name="imagem" accept="image/*" />
+                <p>Se não escolher uma nova imagem, a imagem atual será mantida.</p>
+              </div>
+            </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn" style="background-color:#7979e3;color:white">Guardar alterações</button>
+                    <a href="{{ url_for('admin.rooms') }}" class="btn" style="background-color:#7979e3;color:white">Voltar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

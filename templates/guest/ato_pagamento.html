@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+            <div>
+                <h3 class="mb-1">Checkout da reserva</h3>
+                <p class="text-muted mb-0">Preencha os dados para confirmar o pagamento.</p>
+            </div>
+            <a href="{{ url_for('guest.bookings') }}" class="btn btn-outline-secondary">Voltar às reservas</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="card p-4 h-100">
+                    <h5 class="mb-3">Resumo</h5>
+                    <div class="d-flex justify-content-between mb-2"><span>Reserva nº</span><strong>{{ booking.id }}</strong></div>
+                    <div class="d-flex justify-content-between mb-2"><span>Quarto</span><strong>{{ booking.quarto.numero }}</strong></div>
+                    <div class="d-flex justify-content-between mb-2"><span>Tipo</span><strong>{{ booking.quarto.tipo.title() }}</strong></div>
+                    <div class="d-flex justify-content-between mb-2"><span>Check-in</span><strong>{{ booking.check_in.strftime('%d-%m-%Y') }}</strong></div>
+                    <div class="d-flex justify-content-between mb-2"><span>Check-out</span><strong>{{ booking.check_out.strftime('%d-%m-%Y') }}</strong></div>
+                    <div class="d-flex justify-content-between mb-2"><span>Noites</span><strong>{{ (booking.check_out - booking.check_in).days }}</strong></div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-2"><span>Preço por noite</span><strong>{{ '%.2f'|format(booking.quarto.preco_base) }} €</strong></div>
+                    <div class="d-flex justify-content-between fs-5"><span>Total</span><strong>{{ '%.2f'|format(booking.total_price) }} €</strong></div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card p-4">
+                    <h5 class="mb-3">Dados de faturação</h5>
+                    <form method="POST" action="{{ url_for('guest.pay_booking', booking_id=booking.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="nomeFaturacao" class="form-label">Nome do titular</label>
+                                <input id="nomeFaturacao" type="text" name="nomeFaturacao" class="form-control" value="{{ pagamento.nomeFaturacao if pagamento and pagamento.nomeFaturacao else current_user.name }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="emailFaturacao" class="form-label">Email</label>
+                                <input id="emailFaturacao" type="email" name="emailFaturacao" class="form-control" value="{{ pagamento.emailFaturacao if pagamento and pagamento.emailFaturacao else current_user.email }}" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="numeroCartao" class="form-label">Número do cartão</label>
+                                <input id="numeroCartao" type="text" name="numeroCartao" class="form-control" inputmode="numeric" placeholder="1234 1234 1234 1234" maxlength="23" required>
+                                <div class="form-text">Simulação académica: os dados do cartão não ficam guardados.</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{{ url_for('guest.bookings') }}" class="btn btn-outline-secondary">Cancelar</a>
+                            <button class="btn" style="background-color:#7979e3;color:white" type="submit">Confirmar pagamento</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}O meu perfil{% endblock %}
+{% block content %}
+          <h4 style="color:#7979e3">{{  current_user.name }}, efetue a alteração dos dados que considerar relevantes:</h4>
+                
+          <div class="row justify-content-center mt-5">
+            <div class="col-md-4">
+                 <div class="card p-4">
+            <form
+              class="users-form"
+              method="POST"
+              action="{{url_for('guest.editar_utilizador', user_id=current_user.id)}}"
+              data-custom-validation="true"
+              data-validation-stack-class="admin-messages flash-stack"
+              data-validation-alert-class="admin-alert admin-alert--danger flash-message"
+            >
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <div class="mb-3">
+                  <label for="nome">Nome</label>
+                  <input id="name" type="text" name="name" value="{{current_user.name}}" class="form-control"/>
+              </div>
+                <div class="mb-3">
+                  <label for="username">Username</label>
+                  <input id="username" type="text" name="username" value="{{current_user.username}}" class="form-control"/>
+                </div>
+
+                <div class="mb-3">
+                  <label for="email">Email</label>
+                  <input id="email" type="email" name="email" value="{{current_user.email}}" class="form-control"/>
+                </div>
+
+        
+                <div class="users-form__field">
+                  <label for="estado">Estado da conta</label>
+                  <select id="estado" name="estado" required>
+                    <option value="ativo">Ativado</option>
+                    <option value="inativo" >Inativado</option>
+                  </select>
+                  <p class="users-form__hint users-form__hint--aligned" style="font-size: 10px;">
+                    Se a conta ficar inativa, reservas pendentes serao canceladas automaticamente. Reservas confirmadas impedem a inativacao.
+                  </p>
+                </div>
+
+            
+                  <div class="users-form__field">
+                    <label for="password">Nova password</label>
+                    <input id="password" type="password" name="password" placeholder="introduza a sua nova passe" value="{{current_user.password}}" class="form-control"/>
+                    
+                  </div>
+              
+              </div>
+
+              <div class="row justify-content-center mt-5">
+                <button class="btn" style="background-color:#7979e3;color:white" type="submit">Guardar alteracoes</button>
+               
+              </div>
+            </form>
+
+    </div>  
+{% endblock %}

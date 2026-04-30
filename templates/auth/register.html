@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registo | EasySport</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/base.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/registar.css') }}"
+    />
+  </head>
+  <body class="auth-page">
+    <main class="auth-shell">
+      <section class="auth-card auth-card--wide">
+        <div class="auth-brand">
+          <img
+            class="auth-logo"
+            src="{{ url_for('static', filename='img/HotelAgency.png') }}"
+            alt="Logo EasySport"
+          />
+          <p class="auth-eyebrow">Cria a tua conta</p>
+          <h1>Registar utilizador</h1>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=True) %}
+          {% if messages %}
+            <div class="auth-messages flash-stack">
+              {% for category, message in messages %}
+                <div class="auth-alert auth-alert--{{ category }} flash-message" data-flash-message>
+                  <span class="flash-message__text">{{ message }}</span>
+                  <button class="flash-message__close" type="button" aria-label="Fechar notificação" data-flash-close>&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <form class="auth-form" action="/register" method="post" data-custom-validation="true" data-validation-stack-class="auth-messages flash-stack" data-validation-alert-class="auth-alert auth-alert--danger flash-message">
+         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <div class="auth-field">
+            <label for="nome">Nome</label>
+            <input id="nome" type="text" name="name" placeholder="Nome"  required />
+          </div>
+
+          <div class="auth-field">
+            <label for="username">Username</label>
+            <input
+              id="username"
+              type="text"
+              name="username"
+              placeholder="Username"
+              required
+            />
+          </div>
+
+          <div class="auth-field">
+            <label for="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              placeholder="Email"
+              required
+            />
+          </div>
+
+          <div class="auth-field">
+            <label for="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              name="password"
+              maxlength="15"
+              required
+            />
+               Sua senha deve conter:
+            <ul>
+                <li id="password-rule-2" style="color: rgb(104, 104, 110);">Ao menos uma letra maiúscula</li>
+                <li id="password-rule-3" style="color: rgb(104, 104, 110);">Ao menos uma letra minúscula</li>
+                <li id="password-rule-4" style="color: rgb(104, 104, 110);">Ao menos um número</li>
+                <li id="password-rule-5" style="color: rgb(104, 104, 110);">Ao menos um caractere especial</li>
+                <li id="password-rule-6" style="color: rgb(104, 104, 110);">Caracteres permitidos: A-z0-9@$!%*#?&amp;+-</li>
+                <li id="password-rule-1" style="color: rgb(104, 104, 110);">Entre 8 e 15 caracteres</li>
+            </ul>
+          </div>
+
+          <div class="auth-field">
+            <label for="dataNascimento">Data de nascimento</label>
+            <input
+              id="dataNascimento"
+              type="date"
+              name="dataNascimento"
+              required
+            />
+          </div>
+
+          <div class="auth-actions">
+            <button class="auth-button" type="submit">Registar</button>
+            <a class="auth-button auth-button--secondary" href="/">Cancelar</a>
+          </div>
+        </form>
+
+        <div class="auth-links auth-links--center">
+          <span>Já tens conta?</span>
+          <a href="/login">Fazer login</a>
+        </div>
+      </section>
+    </main>
+    <script src="{{ url_for('static', filename='js/flash-messages.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/form-validation.js') }}"></script>
+  </body>
+</html>

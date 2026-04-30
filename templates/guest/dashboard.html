@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Guest Dashboard{% endblock %}
+{% block content %}
+<h4 class="mb-4" style="color: #7979e3;">Bem-vindo(a), {{ current_user.name }} </h4>
+
+<div class="row g-3 mb-4">
+    <div class="col-4 col-md-4" style="margin:0 auto">
+        <a href="{{ url_for('guest.book') }}" class="text-decoration-none">
+            <div class="card p-3 text-center h-100">
+                <i class="bi bi-calendar-plus fs-1 " style="color:#7979e3"></i>
+                <h6 class="mt-2">Alugar quarto</h6>
+            </div>
+        </a>
+    </div>
+    <div class="col-4 col-md-4" style="margin:0 auto">
+        <a href="{{ url_for('guest.services') }}" class="text-decoration-none">
+            <div class="card p-3 text-center h-100">
+                <i class="bi bi-bell fs-1 " style="color:#7979e3"></i>
+                <h6 class="mt-2">Fazer pedido</h6>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h6 class="mb-3">Reservas recentes</h6>
+            {% if bookings %}
+                {% for b in bookings %}
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <div>
+                        <strong>Room {{ b.quarto.numero }}</strong> ({{ b.quarto.tipo }})<br>
+                        <small class="text-muted">{{ b.check_in }} → {{ b.check_out }}</small>
+                    </div>
+                    <span class="badge bg-{{ 'success' if b.estado == 'checked_in' else 'primary' if b.estado == 'confirmed' else 'secondary' }}">
+                        {{ b.estado.value }}
+                    </span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">Sem reservas efetuadas. </p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h6 class="mb-3">Pedidos efetuados recentemente</h6>
+            {% if requests %}
+                {% for r in requests %}
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <div>
+                        <strong>{{ r.tipo.replace('_', ' ').title() }}</strong><br>
+                        <small class="text-muted">{{ r.descricao[:40] if r.descricao else '' }}</small>
+                    </div>
+                    <span class="badge bg-{{ 'danger' if r.estado == 'pendente' else 'warning' if r.estado == 'em_andamento' else 'success' }}">
+                        {{ r.estado.replace('_', ' ') }}
+                    </span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">Sem pedidos de serviço efetuados.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

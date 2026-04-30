@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Utilizadores{% endblock %}
+{% block content %}
+
+{% if users.count() >= 1 %}
+<h4 class="mb-4" style="color: #7979e3;">Lista de utilizadores</h4>
+<div class="card p-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+      
+       
+    </div>
+    <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0" data-dynamic-table data-page-size="8">
+            <thead class="table-light">
+                <tr>
+                    <th>Nº</th>
+                    <th>Nome</th>
+                    <th>Nome do utilizador</th>
+                    <th>Email</th>
+                    <th>Data</th>
+                    <th>Estado</th>
+                    <th data-sortable="false">Editar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in users %}
+                <tr>
+                    <td>{{ b.id }}</td>
+                    <td>{{ b.name }}</td>
+                    <td>{{ b.username }}</td>
+                    <td>{{ b.email }}</td>
+                    <td>{{ b.dataNascimento.strftime('%d-%m-%Y') }}</td>
+                    <td>{{ b.estado.value }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('guest.alterar_estado_utilizador', user_id=b.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="estado" value="{% if b.estado.value == 'ativo' %}inativo{% else %}ativo{% endif %}" />
+                            <button class="btn users-button {% if b.estado.value == 'ativo' %}users-button--danger{% else %}users-button--success{% endif %}" type="submit" style="padding: 5px 5px;
+            color:#7979e3;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+            border-radius: 3px;
+            outline: 1px solid #7979e3;">
+                                {% if b.estado.value == 'ativo' %}Inativar{% else %}Ativar{% endif %}
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<h3 style="text-align: center;">Quando houver outros utilizadores, serão exibidos aqui.</h3>
+{% endif %}
+
+{% endblock %}

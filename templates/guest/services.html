@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Service Requests{% endblock %}
+{% block content %}
+<h4 class="mb-4" style="color:#7979e3">Pedidos de serviço</h4>
+
+<div class="row g-4">
+    <div class="col-md-5">
+        <div class="card p-4">
+            <h6 class="mb-3">Novo Pedido</h6>
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label">Tipo</label>
+                    <select name="type" class="form-select" required>
+                        <option value="">Selecionar tipo</option>
+                        <option value="Limpeza">Limpeza de quarto</option>
+                        <option value="Serviço de quarto">Serviço de quarto</option>
+                        <option value="manutenção">Manutenção</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Descrição</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="Descreva o seu pedido"></textarea>
+                </div>
+                <button type="submit" class="btn w-100" style="background-color:#7979e3;color:white">Submeter pedido</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card p-3">
+            <h6 class="mb-3">Os meus pedidos</h6>
+            {% if requests %}
+                {% for r in requests %}
+                <div class="d-flex justify-content-between align-items-start py-2 border-bottom">
+                    <div>
+                        <strong>{{ r.tipo.replace('_',' ').title() }}</strong>
+                        <span class="text-muted ms-2" style="font-size:0.8rem;">{{ r.criado_em.strftime('%b %d, %H:%M') }}</span><br>
+                        <small class="text-muted">{{ r.descricao or '—' }}</small>
+                    </div>
+                    <span class="badge  bg-{{ 'warning ' if r.estado == 'pendente' else 'success ' if r.estado == 'em_andamento' else 'resolvido' }}">
+                        {{ r.estado.replace('_',' ') }}
+                    </span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">Sem pedidos efetuados.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

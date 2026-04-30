@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Gerir quartos{% endblock %}
+{% block content %}
+<style>input[type="file"] {
+  display: none;
+}
+
+.custom-file-upload {
+  border: 1px solid #7979e3;
+  display: inline-block;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: black;
+  border-radius: 7px;
+}
+.custom-file-upload:hover{
+    background-color: #7979e3;
+    color: white;
+}
+</style>
+<h4 class="mb-4" style="color: #7979e3;">Gerir quartos</h4>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card p-4">
+            <h6 class="mb-3">Adicionar quarto</h6>
+            <form method="POST" action="{{ url_for('admin.add_room') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label">Room Number</label>
+                    <input type="number" name="number" class="form-control" placeholder="e.g. 101" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Tipo</label>
+                    <select name="type" class="form-select" required>
+                        <option value="singular">Singular</option>
+                        <option value="casal">Casal</option>
+                        <option value="suite">Suite</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Preço por noite (€)</label>
+                    <input type="number" name="price" class="form-control" step="0.01" min="1" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Descrição</label>
+                    <input type="text" name="description" class="form-control" placeholder="Optional">
+                </div>
+
+            <div class="mb-3">
+              <label for="imagem"  class="custom-file-upload">Importar imagem</label>
+              <input type="file" id="imagem" name="imagem" accept="image/*" class=""/>
+            </div>
+                <button type="submit" class="btn btn w-100" style="background-color:#7979e3;color:white">Registar quarto</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card p-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                <h6 class="mb-0">Lista de quartos</h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" >
+                    <thead class="table-light">
+                        <tr><th>Numero</th><th>Tipo</th><th>Preço/Noite</th><th>Estado</th><th data-sortable="false">Mudar estado</th><th data-sortable="false">Ações</th></tr>
+                    </thead>
+                    <tbody>
+                    {% for room in rooms %}
+                    <tr>
+                        <td><strong>{{ room.numero }}</strong></td>
+                        <td>{{ room.tipo.title() }}</td>
+                        <td>{{ "%.2f"|format(room.preco_base) }} €</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if room.estado.value == 'disponivel' else 'danger' if room.estado.value == 'ocupado' else 'warning text-dark' }}">
+                                {{ room.estado.value }}
+                            </span>
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin.update_room_status', room_id=room.id) }}" class="d-flex gap-1">
+                               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <select name="estado" class="form-select form-select-sm" style="width:130px">
+                                    <option value="disponivel" {{ 'selected' if room.estado.value=='disponivel' }}>Disponível</option>
+                                    <option value="ocupado" {{ 'selected' if room.estado.value=='ocupado' }}>Ocupado</option>
+                                    <option value="em_manutencao" {{ 'selected' if room.estado.value=='em_manutencao' }}>Em manutenção</option>
+                                </select>
+                                <button class="btn btn-sm btn-outline-secondary" type="submit">Guardar</button>
+                            </form>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2 flex-wrap">
+                                
+                                <form action="{{url_for('admin.delete_room',room_id=room.id)}}" method="post" onsubmit="return confirm('Eliminar este quarto?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button class="btn btn-sm btn-outline-secondary" type="submit">Eliminar</button></form>
+
+                                <a href="{{ url_for('admin.update_room', room_id=room.id) }}" class="btn btn-sm btn-outline-secondary">Editar</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr data-empty-row="true"><td colspan="6" class="text-muted text-center p-3">Sem quartos ainda. Registe um.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

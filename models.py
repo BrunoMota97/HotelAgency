@@ -1,0 +1,100 @@
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+from flask_bcrypt import Bcrypt
+from datetime import datetime
+from pytz import timezone
+import enum
+
+db = SQLAlchemy()
+bcrypt = Bcrypt()
+
+
+class EstadoUser(enum.Enum):
+    ativo = "ativo"
+    inativo = "inativo"
+
+class EstadoReserva(enum.Enum):
+	pendente = "pendente"
+	confirmada = "confirmada"
+	cancelada = "cancelada"
+
+class EstadoQuarto(enum.Enum):
+	disponivel = "disponivel"
+	ocupado = "ocupado"
+	em_manutencao = "em_manutencao"
+
+class User(UserMixin, db.Model):
+    __tablename__ = "user"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    username = db.Column(db.String(30), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    #isAdmin = db.Column(db.Boolean, default = False)
+    role = db.Column(db.String(20), nullable=False)  
+    dataNascimento = db.Column(db.Date)
+    estado = db.Column(db.Enum(EstadoUser), default=EstadoUser.ativo)
+    reservas = db.relationship("Reserva", back_populates="user", lazy=True)
+    pedidos = db.relationship("Pedido", backref='requester', lazy=True)
+    pagamentos = db.relationship("Pagamento", back_populates="user", lazy=True)
+
+
+    def set_password(self, passe):
+        self.password = bcrypt.generate_password_hash(passe).decode('utf-8')
+       
+
+    def check_password(self, passe):
+        return bcrypt.check_password_hash(self.password, passe)
+
+class Reserva(db.Model):
+    __tablename__ = "reserva"
+    id = db.Column(db.Integer, primary_key=True)
+    idUser = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    idQuarto = db.Column(db.Integer, db.ForeignKey('quarto.id'), nullable=False)
+    check_in = db.Column(db.Date, nullable=False)
+    check_out = db.Column(db.Date, nullable=False)
+    estado = db.Column(db.Enum(EstadoReserva), default=EstadoReserva.pendente) 
+    total_price = db.Column(db.Float, nullable=False)
+    criado_em = db.Column(db.DateTime, default=datetime.now())
+    user = db.relationship("User",back_populates="reservas")
+    quarto=db.relationship("Quarto",back_populates="reservas")
+    pagamento = db.relationship("Pagamento", back_populates="reserva", uselist=False)
+    pedidos = db.relationship('Pedido', backref='reserva', lazy=True)
+
+
+class Quarto(db.Model):
+    __tablename__ = "quarto"
+    id = db.Column(db.Integer, primary_key=True)
+    numero = db.Column(db.Integer, unique=True, nullable=False)
+    tipo = db.Column(db.String(20), nullable=False) 
+    preco_base = db.Column(db.Float, nullable=False)
+    imagem = db.Column(db.String(200))
+    estado = db.Column(db.Enum(EstadoQuarto), nullable=False, default=EstadoQuarto.disponivel) 
+    descricao = db.Column(db.String(300))
+    reservas = db.relationship("Reserva", back_populates="quarto", lazy=True)
+
+
+
+class Pedido(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    booking_id = db.Column(db.Integer, db.ForeignKey('reserva.id'), nullable=True)
+    tipo = db.Column(db.String(30), nullable=False)  
+    descricao = db.Column(db.String(500))
+    estado = db.Column(db.String(20), nullable=False, default='pendente')  
+    criado_em = db.Column(db.DateTime, default=datetime.now())
+    updated_at = db.Column(db.DateTime, default=datetime.now(), onupdate=datetime.now())
+
+
+class Pagamento(db.Model):
+    
+	id = db.Column(db.Integer, primary_key=True)
+	idUser = db.Column(db.Integer, db.ForeignKey('user.id'), nullable = False)
+	idReserva = db.Column(db.Integer, db.ForeignKey('reserva.id'), nullable = False, unique=True)
+	nomeFaturacao = db.Column(db.String(80))
+	emailFaturacao = db.Column(db.String(120))
+	valor = db.Column(db.Float, nullable = False)
+	dataPagamento = db.Column(db.DateTime,default=datetime.now())
+	estado = db.Column(db.String(20), default="pendente")
+	user = db.relationship("User", back_populates="pagamentos")
+	reserva = db.relationship("Reserva", back_populates="pagamento")

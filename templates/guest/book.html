@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Reservar um quarto{% endblock %}
+{% block content %}
+<h4 class="mb-4" style="color: #7979e3;">Reserve um quarto</h4>
+
+<div class="card p-4 mb-4">
+    <form method="GET" class="row g-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="col-md-3">
+            <label class="form-label">Check-in</label>
+            <input type="date" name="check_in" class="form-control" value="{{ check_in or '' }}" required>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Check-out</label>
+            <input type="date" name="check_out" class="form-control" value="{{ check_out or '' }}" required>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Tipo de quarto</label>
+            <select name="room_type" class="form-select">
+                <option value="">Todos</option>
+                <option value="singular" {{ 'selected' if room_type == 'singular' }}>Singular</option>
+                <option value="casal" {{ 'selected' if room_type == 'casal' }}>Casal</option>
+                <option value="suite" {{ 'selected' if room_type == 'suite' }}>Suite</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn w-100" style="background-color:#7979e3;color:white">Procurar</button>
+        </div>
+    </form>
+</div>
+
+{% if rooms is not none %}
+    {% if rooms %}
+        <h6 class="mb-3">{{ rooms|length }} quarto(s) disponíveis</h6>
+        <div class="row g-3"  data-dynamic-table data-page-size="5">
+            {% for room in rooms %}
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        
+                        <div class="d-flex justify-content-between">
+                            <h5 class="card-title">Quarto nº{{ room.numero }}</h5>
+                            <span class="badge bg" style="background-color: #40bf00;">Disponível</span>
+                        </div>
+                        <p class="text-muted mb-1">{{ room.tipo.title() }}</p>
+                         <img  src="{{ url_for('static', filename=room.imagem) }}" style=" width: 100%;
+  height: 80%;
+  object-fit: cover;
+  display: block;" >
+                        <p class="mb-1">{{ room.descricao}}</p>
+                        <h5 style="color:#7979e3">{{ room.preco_base }}€/noite</h5>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <form method="POST" action="{{ url_for('guest.confirm_booking', room_id=room.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="check_in" value="{{ check_in }}">
+                            <input type="hidden" name="check_out" value="{{ check_out }}">
+                            <button type="submit" class="btn w-100" style="background-color:#7979e3;color:white">Reserve agora</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">Sem quartos disponíveis para as datas selecionadas. Selecione outras..</div>
+    {% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Staff Dashboard{% endblock %}
+{% block content %}
+<h4 class="mb-4" style="color: #7979e3;">Service Staff Dashboard</h4>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card p-3" >
+            <h6 style="color:#7979e3"><i class="bi bi-clock me-2" style="color:#7979e3"></i>Pendentes ({{ pending|length }})</h6>
+            {% for r in pending %}
+            <div class="py-2 border-bottom">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>{{ r.tipo.replace('_',' ').title() }}</strong><br>
+                        <small class="text-muted">{{ r.requester.name }}</small><br>
+                        <small>{{ r.descricao or '—' }}</small>
+                    </div>
+                </div>
+                <form method="POST" action="{{ url_for('staff.update_request', req_id=r.id) }}" class="mt-2">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="status" value="em_andamento">
+                    <button class="btn btn-sm  w-100" style="background-color:#7979e3;color:white">Enviar →</button>
+                </form>
+            </div>
+            {% else %}
+            <p class="text-muted">Sem pedidos pendentes.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card p-3">
+            <h6 style="color:#7979e3"><i class="bi bi-gear me-2" style="color:#7979e3"></i>Em andamento ({{ in_progress|length }})</h6>
+            {% for r in in_progress %}
+            <div class="py-2 border-bottom">
+                <strong>{{ r.tipo.replace('_',' ').title() }}</strong><br>
+                <small class="text-muted">{{ r.requester.name }}</small><br>
+                <small>{{ r.descricao or '—' }}</small>
+                <form method="POST" action="{{ url_for('staff.update_request', req_id=r.id) }}" class="mt-2">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="status" value="resolvido">
+                    <button class="btn btn-sm  w-100" style="background-color:#7979e3;color:white">Resolver ✓</button>
+                </form>
+            </div>
+            {% else %}
+            <p class="text-muted">Sem pedidos em andamento.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card p-3">
+            <h6 style="color:#7979e3"><i class="bi bi-check-circle me-2" style="color:#7979e3"></i>Resolvidos({{ completed|length }})</h6>
+            {% for r in completed %}
+            <div class="py-2 border-bottom">
+                <strong>{{ r.tipo.replace('_',' ').title() }}</strong><br>
+                <small class="text-muted">{{ r.requester.name }} · {{ r.updated_at.strftime('%b %d, %H:%M') }}</small>
+            </div>
+            {% else %}
+            <p class="text-muted">Sem pedidos resolvidos.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

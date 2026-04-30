@@ -1,0 +1,77 @@
+
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | EasySport</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/base.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/login.css') }}"
+    />
+  </head>
+  <body class="auth-page">
+    <main class="auth-shell">
+      <section class="auth-card">
+        <div class="auth-brand">
+          <img
+            class="auth-logo"
+            src="{{ url_for('static', filename='img/HotelAgency.png') }}"
+            alt="Logo EasySport"
+          />
+          <p class="auth-eyebrow">Plataforma de reservas desportivas</p>
+          <h1>Entrar na conta</h1>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=True) %}
+          {% if messages %}
+            <div class="auth-messages flash-stack">
+              {% for category, message in messages %}
+                <div class="auth-alert auth-alert--{{ category }} flash-message" data-flash-message>
+                  <span class="flash-message__text">{{ message }}</span>
+                  <button class="flash-message__close" type="button" aria-label="Fechar notificação" data-flash-close>&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <form class="auth-form" action="/login" method="post" data-custom-validation="true" data-validation-stack-class="auth-messages flash-stack" data-validation-alert-class="auth-alert auth-alert--danger flash-message">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <div class="auth-field">
+            <label for="username">Username ou email</label>
+            <input id="email" type="text" name="email" placeholder="Username ou email"  required />
+          </div>
+    
+          <div class="auth-field">
+            <label for="password">Password</label>
+            
+            <input id="password" type="password" name="password" placeholder="Password" class="form-control" />
+             <button class="toggle-password" id="togglePassword" type="button" aria-label="Afficher ou masquer le mot de passe">
+            Mostrar
+          </button>
+            
+          </div>
+
+          <button class="auth-button" type="submit">Login</button>
+        </form>
+
+        <div class="auth-links">
+          <a href="/landing">Voltar ao início</a>
+          <a href="/recover">Esqueceu da passe?Criar nova.</a>
+          <a href="/register">Criar conta</a>
+        </div>
+      </section>
+    </main>
+    <script src="{{ url_for('static', filename='js/flash-messages.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/form-validation.js') }}"></script>
+  </body>
+</html>
+
+
+<script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+

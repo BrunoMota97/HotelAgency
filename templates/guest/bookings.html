@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}My Bookings{% endblock %}
+{% block content %}
+<style>.roxo{
+            padding: 5px 5px;
+            color:#7979e3;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+            border-radius: 3px;
+            outline: 1px solid #7979e3;
+}
+.roxo:hover{
+    background-color: #7979e3;
+    color:white;
+}</style>
+{% if current_user.role=='guest' %}
+<h4 class="mb-4" style="color:#7979e3">As minhas reservas</h4>
+{% else %}
+<h4 class="mb-4" style="color:#7979e3">Reservas</h4>
+{% endif %}
+
+{% if bookings %}
+<div class="card p-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" data-dynamic-table data-page-size="6">
+            <thead class="table-light">
+                <tr>
+                    <th>Nº</th>
+                    {% if current_user.role=='admin' %}<th>Nome</th>{% endif %}
+                    <th>Quarto</th>
+                    <th>Tipo</th>
+                    <th>Data de início</th>
+                    <th>Data de fim</th>
+                    <th>Data de criação</th>
+                    <th>Total</th>
+                    <th>Estado</th>
+                    <th data-sortable="false">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in bookings %}
+                <tr>
+                    <td>{{ b.id }}</td>
+                    {% if current_user.role=='admin' %}
+                    <td>{{ b.user.name }}</td>
+                    {% endif %}
+                    <td>{{ b.quarto.numero }}</td>
+                    <td>{{ b.quarto.tipo.title() }}</td>
+                    <td>{{ b.check_in.strftime('%d-%m-%Y') }}</td>
+                    <td>{{ b.check_out.strftime('%d-%m-%Y') }}</td>
+                    <td>{{b.criado_em.replace(second=0, microsecond=0).strftime('%d-%m-%Y %H:%M')}}</td>
+                    <td>{{ "%.2f"|format(b.total_price) }} €</td>
+                    <td>
+                        <span class="badge bg-{{ 'warning text-dark' if b.estado.value == 'pendente' else 'success' if b.estado.value == 'confirmada' else 'secondary' }}">
+                            {{ b.estado.value }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if b.estado.value == 'pendente' %}
+                            {% if current_user.role != 'admin' %}
+                            <form method="POST" action="{{ url_for('guest.pay_booking', booking_id=b.id) }}" onsubmit="return confirm('Avançar para pagamento?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm  w-70 roxo">Efetuar pagamento</button>
+                            </form>
+                            {% endif %}
+                            <form method="POST" action="{{ url_for('guest.cancel_booking', booking_id=b.id) }}" onsubmit="return confirm('Cancelar reserva?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm  w-70 roxo">Cancelar reserva</button>
+                            </form>
+                        {% endif %}
+                        {% if b.estado.value == 'confirmada' %}
+                            {% if current_user.role != 'admin' %}
+                            <form method="POST" action="{{ url_for('guest.cancel_booking', booking_id=b.id) }}" onsubmit="return confirm('Cancel this booking?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm  w-70 roxo">Cancelar reserva e solicitar reembolso</button>
+                            </form>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+    {% if current_user.role != 'guest' %}
+    <div class="alert alert-info">Sem reservas ainda. <a href="{{ url_for('guest.book') }}">Reserve um quarto.</a></div>
+    {% else %}
+    <div class="alert alert-info">Não existem reservas efetuadas</div>
+    {% endif %}
+{% endif %}
+{% endblock %}

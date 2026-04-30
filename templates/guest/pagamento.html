@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}Pagamentos{% endblock %}
+{% block content %}
+
+{% set lista_pagamentos = pagamentos | list %}
+{% set lista_reembolsos = lista_pagamentos | selectattr('estado', 'equalto', 'reembolsado') | list %}
+<style>.roxo{
+            padding: 5px 5px;
+            color:#7979e3;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+            border-radius: 3px;
+            outline: 1px solid #7979e3;
+}
+.roxo:hover{
+    background-color: #7979e3;
+    color:white;
+}
+</style>
+{% if current_user.role == 'admin' %}
+<h4 class="mb-4" style="color:#7979e3">Pagamentos e reembolsos</h4>
+{% else %}
+<h4 class="mb-4" style="color:#7979e3">Os meus pagamentos e reembolsos</h4>
+{% endif %}
+
+<h5 style="color:#7979e3">Pagamentos</h5>
+{% if lista_pagamentos %}
+<div class="card p-3 mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+   
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" data-dynamic-table data-page-size="6">
+            <thead class="table-light">
+                <tr>
+                    <th>Nº</th>
+                    <th>ID reserva nº</th>
+                    <th>Quarto nº</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Total</th>
+                    <th>Estado</th>
+                    <th>Data de pagamento</th>
+                    <th data-sortable="false"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in lista_pagamentos %}
+                <tr>
+                    <td>{{ p.id }}</td>
+                    <td>{{ p.idReserva }}</td>
+                    <td>{{ p.reserva.quarto.numero }}</td>
+                    <td>{{ p.reserva.check_in.strftime('%d-%m-%Y') }}</td>
+                    <td>{{ p.reserva.check_out.strftime('%d-%m-%Y') }}</td>
+                    <td>{{ "%.2f"|format(p.valor) }} €</td>
+                    <td>{{ p.estado }}</td>
+                    <td>{{ p.dataPagamento.replace(second=0, microsecond=0).strftime('%d-%m-%Y %H:%M') if p.dataPagamento else '—' }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('guest.recipe', booking_id=p.id) }}" onsubmit="return confirm('Emitir fatura?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-sm  w-70 roxo" >Emitir fatura</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+    {% if current_user.role != 'admin' %}
+    <div class="alert alert-info">Não tem pagamentos. Se os tiver, aparecerão aqui.</div>
+    {% else %}
+    <div class="alert alert-info">Não há registo de pagamentos</div>
+    {% endif %}
+{% endif %}
+
+<h5 style="color:#7979e3">Reembolsos</h5>
+{% if lista_reembolsos %}
+<div class="card p-3">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" data-dynamic-table data-page-size="5">
+            <thead class="table-light">
+                <tr>
+                    <th>Nº</th>
+                    <th>ID reserva nº</th>
+                    <th>Quarto</th>
+                    <th>Valor devolvido</th>
+                    <th>Data do pagamento</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in lista_reembolsos %}
+                <tr>
+                    <td>{{ p.id }}</td>
+                    <td>{{ p.idReserva }}</td>
+                    <td>{{ p.reserva.quarto.numero }}</td>
+                    <td>{{ "%.2f"|format(p.valor) }} €</td>
+                    <td>{{ p.dataPagamento.replace(second=0, microsecond=0).strftime('%d-%m-%Y %H:%M') if p.dataPagamento else '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+    {% if current_user.role != 'admin' %}
+    <div class="alert alert-info">Não tem reembolsos. Se os tiver, aparecerão aqui.</div>
+    {% else %}
+    <div class="alert alert-info">Não há registo de reembolsos</div>
+    {% endif %}
+{% endif %}
+{% endblock %}
