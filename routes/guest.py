@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, request, send_file
 from flask_login import login_required, current_user
-from models import db, Quarto, Reserva, Pedido, User, EstadoUser, EstadoReserva, Pagamento, EstadoQuarto
+from models import db, Quarto, Reserva, Pedido, User, EstadoUser, EstadoReserva, Pagamento, EstadoQuarto,Feedback
 from datetime import datetime, date
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -52,6 +52,10 @@ def book():
                 Quarto.estado == EstadoQuarto.disponivel,
                 ~Quarto.id.in_(booked_ids),
             )
+            #total = Feedback.query.filter_by(idQuarto=Quarto.numero).count()
+            #item_feedback = Feedback.query.filter_by(idQuarto=Quarto.numero).all()
+            #soma= sum(f.nota for f in item_feedback)
+            #media=round(soma/total,1)
             if room_type:
                 query = query.filter_by(tipo=room_type)
             available_rooms = query.all()
@@ -149,6 +153,43 @@ def cancel_booking(booking_id):
 
 
 
+@guest_bp.route('/bookings/<int:booking_id>/opinar', methods=['GET', 'POST'])
+@login_required
+def feedback(booking_id):
+    booking = Reserva.query.filter_by(id=booking_id, idUser=current_user.id).first_or_404()
+    total = Feedback.query.filter_by(idQuarto=booking.quarto.numero).count()
+
+    room = Quarto.query.get(booking.idQuarto)
+    
+    return render_template('guest/feedback.html', booking=booking,total=total,room=room)
+
+
+@guest_bp.route('/bookings/<int:booking_id>/feedback', methods=['POST','GET'])
+@login_required
+def give_feedback(booking_id):
+ if request.method=='POST':
+     nota = request.form.get('nota')
+     opiniao = request.form.get('opiniao')
+     booking = Reserva.query.filter_by(id=booking_id, idUser=current_user.id).first_or_404()
+     feedback = Feedback(nota=nota,idQuarto=booking.quarto.numero,opiniao=opiniao)
+     room = Quarto.query.get(booking.idQuarto)
+     total = Feedback.query.filter_by(idQuarto=booking.quarto.numero).count()
+     item_feedback = Feedback.query.filter_by(idQuarto=booking.quarto.numero).all()
+     soma= sum(f.nota for f in item_feedback)
+     if total==0:
+        room.classificacao=nota
+     else:
+        media=soma/total
+        room.classificacao = round(media,2)
+     db.session.add(feedback)
+     db.session.commit()
+     flash("Opinião submetida com sucesso!","success")
+     return redirect(url_for('guest.dashboard'))
+ return render_template('guest/feedback.html',booking=booking,room=room)
+
+
+
+
 @guest_bp.route('/bookings/<int:booking_id>/pagar', methods=['POST'])
 @login_required
 def pay_booking(booking_id):
@@ -208,8 +249,6 @@ def recipe(booking_id):
     c.drawString(90, height - 50, 'HotelAgency')
     c.setFont('Helvetica', 11)
     c.drawString(90, height - 70, 'Fatura / Recibo de pagamento')
-
-
 
     c.setFillColor(colors.black)
     c.setStrokeColor(colors.HexColor('#d1d5db'))

@@ -23,7 +23,7 @@
             src="{{ url_for('static', filename='img/HotelAgency.png') }}"
             alt="Logo EasySport"
           />
-          <p class="auth-eyebrow">Plataforma de reservas desportivas</p>
+          <p class="auth-eyebrow">Plataforma de reservas de hotelaria</p>
           <h1>Entrar na conta</h1>
         </div>
 
@@ -43,17 +43,15 @@
         <form class="auth-form" action="/login" method="post" data-custom-validation="true" data-validation-stack-class="auth-messages flash-stack" data-validation-alert-class="auth-alert auth-alert--danger flash-message">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <div class="auth-field">
-            <label for="username">Username ou email</label>
-            <input id="email" type="text" name="email" placeholder="Username ou email"  required />
+            <label for="email">Username ou email</label>
+            <input id="email" type="text" name="email" placeholder="Username ou email" autocomplete="off" required />
           </div>
     
           <div class="auth-field">
             <label for="password">Password</label>
             
-            <input id="password" type="password" name="password" placeholder="Password" class="form-control" />
-             <button class="toggle-password" id="togglePassword" type="button" aria-label="Afficher ou masquer le mot de passe">
-            Mostrar
-          </button>
+            <input id="password-field" type="password" name="password" placeholder="Password" class="form-control" required/>
+             <span toggle="#password-field" class="fa fa-fw fa-eye field-icon toggle-password"></span>
             
           </div>
 
@@ -62,16 +60,12 @@
 
         <div class="auth-links">
           <a href="/landing">Voltar ao início</a>
-          <a href="/recover">Esqueceu da passe?Criar nova.</a>
           <a href="/register">Criar conta</a>
         </div>
       </section>
     </main>
     <script src="{{ url_for('static', filename='js/flash-messages.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/form-validation.js') }}"></script>
   </body>
 </html>
 
-
-<script src="{{ url_for('static', filename='js/validation.js') }}"></script>
 

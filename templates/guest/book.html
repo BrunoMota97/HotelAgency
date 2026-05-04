@@ -38,7 +38,7 @@
                 <div class="card h-100">
                     <div class="card-body">
                         
-                        <div class="d-flex justify-content-between">
+                        <div class="d-flex justify-content-between" >
                             <h5 class="card-title">Quarto nº{{ room.numero }}</h5>
                             <span class="badge bg" style="background-color: #40bf00;">Disponível</span>
                         </div>
@@ -49,8 +49,28 @@
   display: block;" >
                         <p class="mb-1">{{ room.descricao}}</p>
                         <h5 style="color:#7979e3">{{ room.preco_base }}€/noite</h5>
+                        <hr>
+                          {% if room.classificacao==0 %}
+                          Sem avaliação ainda
+                          {% else %}
+                          Avaliação:
+                          {% if room.classificacao < 1 %}      
+                         <h5 style="color:rgba(255, 0, 0, 0.485)">{{ room.classificacao| round(1)}}/5</h5>
+                         {% elif room.classificacao < 2 %}
+                          <h5 style="color:rgba(255, 0, 0, 0.915)">{{ room.classificacao| round(1)}}/5</h5>
+                          {% elif room.classificacao < 3 %}
+                          <h5 style="color:rgba(246, 150, 16, 0.915)">{{ room.classificacao| round(1)}}/5</h5>
+                         {% elif room.classificacao < 4 %}
+                         <h5 style="color:rgb(255, 220, 23)">{{ room.classificacao| round(1)}}/5</h5>
+                          {% elif room.classificacao < 4.5 %}
+                         <h5 style="color:rgb(44, 223, 53)">{{room.classificacao| round(1)}}/5</h5>
+                          {% else %}
+                          <h5 style="color:green;margin-bottom:20px">{{ room.classificacao| round(1)}}/5</h5>
+                           {% endif %}
+                           {% endif %}
+                    </hr>
                     </div>
-                    <div class="card-footer bg-transparent">
+                    <div class="card-footer bg-transparent" style="margin-top: 100px;">
                         <form method="POST" action="{{ url_for('guest.confirm_booking', room_id=room.id) }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="check_in" value="{{ check_in }}">

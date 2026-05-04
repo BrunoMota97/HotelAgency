@@ -71,9 +71,9 @@ class Quarto(db.Model):
     imagem = db.Column(db.String(200))
     estado = db.Column(db.Enum(EstadoQuarto), nullable=False, default=EstadoQuarto.disponivel) 
     descricao = db.Column(db.String(300))
+    classificacao=db.Column(db.Float,nullable=False,default=0)
     reservas = db.relationship("Reserva", back_populates="quarto", lazy=True)
-
-
+    #feedback = db.relationship("Feedback",back_populates="quarto",lazy=True)
 
 class Pedido(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -98,3 +98,10 @@ class Pagamento(db.Model):
 	estado = db.Column(db.String(20), default="pendente")
 	user = db.relationship("User", back_populates="pagamentos")
 	reserva = db.relationship("Reserva", back_populates="pagamento")
+
+
+class Feedback(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    nota = db.Column(db.Integer,nullable=False)
+    idQuarto = db.Column(db.Integer,db.ForeignKey('quarto.id'),nullable=False)
+    opiniao = db.Column(db.String(200))

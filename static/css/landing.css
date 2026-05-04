@@ -22,7 +22,7 @@ body.landing-page {
   padding: 18px 22px;
   border-radius: 28px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(192, 134, 251, 0.8);
+  background: rgba(213, 200, 226, 0.8);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
   backdrop-filter: blur(10px);
 }
@@ -183,7 +183,7 @@ body.landing-page {
   padding: 32px;
   border-radius: 32px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(192, 134, 251, 0.8);
+  background: rgba(213, 191, 235, 0.8);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
 }
 

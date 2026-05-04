@@ -1,0 +1,31 @@
+{%extends 'base.html'%}
+{% block title %}Feedback{% endblock %}
+{% block content %}
+<h5 style="color:#7979e3">Feedback e estatísticas</h5>
+<div class="card p-3">
+<div class="table-responsive">
+     <table class="table table-hover mb-0" data-dynamic-table data-page-size="10">
+       <thead class="table-light">
+        <tr>
+        <th>Nº</th>
+        <th>Quarto nº</th>
+        <th>Nota</th>
+         <th>Descricao</th>
+        </tr>
+       </thead>
+       <tbody>
+        <tr>
+        {% for f in all_feedbacks %}
+        <td>{{f.id}}</td>
+        <td>{{f.idQuarto}}</td>
+        <td>{{f.nota}}</td>
+        <td>{{f.opiniao}}</td>
+
+            </tr>
+             {% endfor %}
+       </tbody>
+     </table>
+</div>
+</div>
+
+{% endblock %}

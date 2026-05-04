@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+            <div>
+                <h3 class="mb-1">Dê-nos a sua opinião.</h3>
+                <p class="text-muted mb-0">Preencha o seguinte formulário.</p>
+            </div>
+            <a href="{{ url_for('guest.bookings') }}" class="btn btn-outline-secondary">Voltar às reservas</a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="card p-4 h-100">
+                    <h5 class="mb-3">Resumo</h5>
+                        <div class="d-flex justify-content-between mb-2"><span>Reserva nº</span><strong>{{ booking.id }}</strong></div>
+                        <div class="d-flex justify-content-between mb-2"><span>Id Quarto nº</span><strong>{{ booking.idQuarto }}</strong></div>
+                        <div class="d-flex justify-content-between mb-2"><span>Quarto nº</span><strong>{{ booking.quarto.numero }}</strong></div>
+                        <div class="d-flex justify-content-between mb-2"><span>Tipo</span><strong>{{ booking.quarto.tipo.title() }}</strong></div>
+
+                         <div class="d-flex justify-content-between mb-2"><span>Nº de feedbacks do quarto:</span><strong>{{ total }}</strong></div>
+                          <div class="d-flex justify-content-between mb-2"><span>Média até agora:</span><strong>{{ room.classificacao }}</strong></div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card p-4">
+                    <h5 class="mb-3">O seu feedback é importante para nós.</h5>
+                    <form method="POST" action="{{ url_for('guest.give_feedback', booking_id=booking.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Dê uma nota de 1 a 5:</label>
+                                <select name="nota" class="form-select">
+                                 <option value="">Selecione a nota</option>
+                                 <option value="1" >1</option>
+                                  <option value="2" >2</option>
+                                  <option value="3" >3</option>
+                                  <option value="4" >4</option>
+                                  <option value="5" >5</option>
+                                </select>
+
+                                <label class="form-label">Descrição</label>
+                               <textarea name="opiniao" class="form-control" rows="3" placeholder="Diga-nos o que sente."></textarea>
+                            </div>
+                                
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{{ url_for('guest.bookings') }}" class="btn btn-outline-secondary">Cancelar</a>
+                            <button class="btn" style="background-color:#7979e3;color:white" type="submit">Submeter opinião</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

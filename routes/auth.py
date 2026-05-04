@@ -9,17 +9,19 @@ import bcrypt
 import os
 from sqlalchemy.orm import sessionmaker
 import re
-
+#from ozekilibsrest import Configuration, Message, MessageApi
 
 auth_bp = Blueprint('auth', __name__)
 
-#current_app.config['SECRET_KEY'] = '134566gfs'
-#current_app.config['PERMANENT_SESSION_LIFETIME'] =  timedelta(minutes=1)
-
-PERMANENT_SESSION_LIFETIME = timedelta(minutes=1)
+PERMANENT_SESSION_LIFETIME = timedelta(minutes=3)
 SESSION_REFRESH_EACH_REQUEST = True
 SESSION_COOKIE_HTTPONLY = True
 REMEMBER_COOKIE_HTTPONLY = True
+
+LOGIN_MAX_ATTEMPTS = 3
+LOGIN_WINDOW = timedelta(minutes=5)
+LOGIN_LOCKOUT = timedelta(minutes=10)
+login_attempts: Dict[str, Dict[str, Any]] = {}
 
 @auth_bp.route('/')
 def index():
@@ -28,12 +30,11 @@ def index():
         return redirect(url_for(f'{current_user.role}.dashboard') if current_user.role != 'service_staff' else url_for('staff.dashboard'))
     return redirect(url_for('auth.login'))
 
-
 @auth_bp.route('/landing')
 def landing():
     return render_template('auth/landing.html')
 
-
+"""Autenticação na consola
 def autenticacao_segura(hash_correto: bytes, max_tentativas: int = 3) -> bool:
 
     tentativas = 0
@@ -50,8 +51,46 @@ def autenticacao_segura(hash_correto: bytes, max_tentativas: int = 3) -> bool:
 
     print("  [BLOQUEADO] Conta bloqueada após demasiadas tentativas falhadas.")
     return False
+"""
+def login_key(username: str) -> str:
+        ip = request.remote_addr or "unknown-ip"
+        return f"{ip}:{username.lower()}"
 
+def is_login_locked(username: str) -> Tuple[bool, int]:
+        key = login_key(username)
+        record = login_attempts.get(key)
+        if not record:
+            return False, 0
 
+        locked_until = record.get("locked_until")
+        now = datetime.utcnow()
+        if locked_until and now < locked_until:
+            remaining = int((locked_until - now).total_seconds() // 60) + 1
+            return True, remaining
+
+        first_attempt = record.get("first_attempt")
+        if first_attempt and now - first_attempt > LOGIN_WINDOW:
+            login_attempts.pop(key, None)
+        return False, 0
+
+def register_failed_login(username: str) -> None:
+        key = login_key(username)
+        now = datetime.utcnow()
+        record = login_attempts.get(key)
+
+        if not record or now - record.get("first_attempt", now) > LOGIN_WINDOW:
+            record = {"count": 1, "first_attempt": now, "locked_until": None}
+        else:
+            record["count"] = int(record.get("count", 0)) + 1
+
+        if int(record["count"]) >= LOGIN_MAX_ATTEMPTS:
+            record["locked_until"] = now + LOGIN_LOCKOUT
+            flash("Login temporarily locked for username=%s", user.username)
+
+        login_attempts[key] = record
+
+def clear_failed_logins(username: str) -> None:
+        login_attempts.pop(login_key(username), None)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -62,22 +101,15 @@ def login():
         password = request.form.get('password')
         user = User.query.filter_by(email=email).first()
 
-        if not user:
+        locked, minutes = is_login_locked(email)
+        if locked:
+            flash(f"Excedeu o número de tentativas. Tente novamente dentro de {minutes} minutos.")
+            return redirect(url_for("auth.login"))
+
+        if not user or not user.check_password(password):
+           register_failed_login(email)
            flash("Credenciais invalidas", "danger")
            return redirect(url_for('auth.login'))
-       
-        if not user.check_password(password):
-            flash("Credenciais invalidas", "danger")
-            return redirect(url_for('auth.login'))
-
-        if not autenticacao_segura(password):
-            user.estado= EstadoUser.inativo
-            flash("A sua conta foi bloqueada!","danger")
-            return redirect(url_for('auth.login'))
-       # else:
-        #   if user.password != password:
-         #     flash("Credenciais invalidas", "danger")
-          #    return redirect(url_for('auth.login'))
 
         if user.estado == EstadoUser.inativo:
             flash("A conta está inativa pelo que não é possível iniciar sessão.", "danger")
@@ -85,17 +117,17 @@ def login():
         if user and user.password:
             login_user(user)
             #session.permanent = True
-            agora = datetime.now()
             role_redirects = {
                 'guest': 'guest.dashboard',
                 'admin': 'admin.dashboard',
             }
-            
-            #session['user_id'] = user.id
-           # session['last_active'] = datetime.now()
+            #clear_failed_logins(email)
+            #session.clear()
+            #session.permanent = True
+            #session["user_id"] = user.id
             return redirect(url_for(role_redirects.get(user.role, 'guest.dashboard')))
         else:
-             flash('Email ou passeword inválidos.', 'danger')
+             flash('Email ou password inválidos.', 'danger')
              return redirect(url_for('auth.login'))
     return render_template('auth/login.html')
 
@@ -176,10 +208,7 @@ def register():
         login_user(user)
         flash('Conta criada! Bem-vindo(a).', 'success')
         return redirect(url_for('guest.dashboard'))
-        #session['last_active'] = datetime.now()
     return render_template('auth/register.html')
-
-
 
 def is_session_expired():
     if 'last_active' in session:
@@ -187,17 +216,44 @@ def is_session_expired():
             return True
     return False
 
-
 @auth_bp.route('/logout')
 @login_required
 def logout():
-   # if is_session_expired():
-   #    session.clear()
-   #   logout_user()
-    #  return redirect(url_for('auth.login'))
-   # else:
       session.clear()
       logout_user()
       return redirect(url_for('auth.login'))
-    #    logout_user()
 
+
+
+
+
+"""
+configuration = Configuration(
+    username="http_user",
+    password="qwe123",
+    api_url="http://127.0.0.1:9509/api"
+)
+         
+api = MessageApi(configuration)
+         
+logs = []
+
+
+@auth_bp.route('/recover')
+def recover():
+    return render_template('auth/recuperar.html')
+
+@auth_bp.route('/recover',methods=['GET','POST'])
+def send_sms(email):
+    if request.method=='POST':
+      email = request.form.get('email')
+      message = Message(
+            to_address=email,
+            text="Olá"
+        )
+      log = api.send(message)
+      logs.append(log)
+    return render_template('recover.html', logs=logs)
+
+
+"""

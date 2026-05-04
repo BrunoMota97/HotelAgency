@@ -1,5 +1,5 @@
 
-<form method="POST">
+<form method="POST" action="{{url_for('auth.send_sms', email=email)}}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label for="email">Insira o seu email:</label>
     <input type="text" id="email" name="email" required>

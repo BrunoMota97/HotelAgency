@@ -2,10 +2,11 @@ import os
 import uuid
 from flask import Blueprint, render_template, redirect, url_for, flash, request,current_app
 from flask_login import login_required, current_user
-from models import db, Quarto, Reserva, User, Pedido, EstadoQuarto, EstadoReserva
+from models import db, Quarto, Reserva, User, Pedido, EstadoQuarto, EstadoReserva,Feedback
 from datetime import date
 from werkzeug.utils import secure_filename
 
+#import html
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 EXTENSOES_IMAGEM_PERMITIDAS = {"png", "jpg", "jpeg", "gif", "webp"}
@@ -42,9 +43,6 @@ def dashboard():
                            pending_requests=pending_requests,
                            recent_bookings=recent_bookings,user_ativo=user_ativo,user_inativo=user_inativo)
 
-
-
-
 @admin_bp.route('/rooms')
 @login_required
 def rooms():
@@ -52,7 +50,6 @@ def rooms():
     for quarto in all_rooms:
         quarto.imagem_listagem = _imagem_listagem(quarto)
     return render_template('admin/rooms.html', rooms=all_rooms)
-
 
 
 def _guardar_imagem(imagem_file):
@@ -92,22 +89,16 @@ def _imagem_listagem(espaco):
 
     return imagem
 
-
-
-
-
 @admin_bp.route('/rooms/add', methods=['POST'])
 @login_required
 def add_room():
     number = request.form.get('number', '').strip()
     room_type = request.form.get('type', '').strip()
     price = request.form.get('price', '').strip()
-    description = request.form.get('description', '').strip()
+    description = request.form.get('description', '')
+    #html.escape(description)
     imagem_file = request.files.get("imagem")
     
-    #if not number.isdigit:
-    #    flash('Precisa de introduzir um número')
-    #    return redirect(url_for('admin.rooms'))
 
     if not number or not room_type or not price:
         flash('Preencha os campos obrigatórios do quarto.', 'danger')
@@ -221,3 +212,15 @@ def update_room_status(room_id):
     db.session.commit()
     flash(f'Estado do quarto nº {room.numero} atualizado.', 'success')
     return redirect(url_for('admin.rooms'))
+
+@admin_bp.route('/feedbacks')
+@login_required
+def show_feedback_status():
+
+    all_feedbacks = Feedback.query.all()
+    #booking = Reserva.query.filter_by(id=booking_id, idUser=current_user.id).first_or_404()
+    #total = Feedback.query.filter_by(idQuarto=Reserva.quarto.numero).count()
+    #item_feedback = Feedback.query.filter_by(idQuarto=booking.quarto.numero).all()
+    #soma= sum(f.nota for f in item_feedback)
+    #media=soma/total
+    return render_template('/admin/show_feedback_status.html',all_feedbacks=all_feedbacks)

@@ -20,7 +20,9 @@ from flask_wtf import FlaskForm, CSRFProtect
 
 csrf = CSRFProtect()
 
-
+LOGIN_MAX_ATTEMPTS = 3
+LOGIN_WINDOW = timedelta(minutes=5)
+LOGIN_LOCKOUT = timedelta(minutes=10)
 
 
 def create_app():
@@ -37,15 +39,12 @@ def create_app():
         raise RuntimeError("SECRET_KEY environment variable is required in production.")
 
     app.config["SECRET_KEY"] = secret_key or "dev-secret-change-me"
-    #app.config["SESSION_COOKIE_SECURE"] = os.environ.get("FLASK_ENV") == "production"
+    app.config["SESSION_COOKIE_SECURE"] = os.environ.get("FLASK_ENV") == "production"
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.config["SESSION_COOKIE_SECURE"] = production
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)
 
-    LOGIN_MAX_ATTEMPTS = 5
-    LOGIN_WINDOW = timedelta(minutes=5)
-    LOGIN_LOCKOUT = timedelta(minutes=10)
 
     app.config.from_object(Config)
 
@@ -57,14 +56,21 @@ def create_app():
     login_manager = LoginManager(app)
     login_manager.login_view = 'auth.login'
     login_manager.login_message_category = 'warning'
-    
 
+    
     def get_csrf_token() -> str:
       token = session.get("_csrf_token")
       if not token:
         token = secrets.token_urlsafe(32)
         session["_csrf_token"] = token
       return token
+    
+
+    def validate_csrf() -> None:
+      form_token = request.form.get("_csrf_token")
+      session_token = session.get("_csrf_token")
+      if not form_token or not session_token or not secrets.compare_digest(form_token, session_token):
+        abort(400, description="Invalid CSRF token.")
 
 
     
@@ -75,15 +81,15 @@ def create_app():
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; "
-            "style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; "
-            "script-src 'self' https://cdn.jsdelivr.net; "
-            "img-src 'self' data:; "
-            "object-src 'none'; "
-            "base-uri 'self'; "
-            "frame-ancestors 'none'"
-        )
+        #response.headers["Content-Security-Policy"] = (
+        #    "default-src 'self'; "
+        #    "style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; "
+        #    "script-src 'self' https://cdn.jsdelivr.net; "
+        #    "img-src 'self' data:; "
+        #    "object-src 'none'; "
+        #    "base-uri 'self'; "
+        #    "frame-ancestors 'none'"
+        #)
         if production:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response

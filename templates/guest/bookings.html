@@ -77,7 +77,11 @@
                             <form method="POST" action="{{ url_for('guest.cancel_booking', booking_id=b.id) }}" onsubmit="return confirm('Cancel this booking?')">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button class="btn btn-sm  w-70 roxo">Cancelar reserva e solicitar reembolso</button>
+                                
                             </form>
+                            <form method="POST" action="{{url_for('guest.feedback',booking_id=b.id)}}"> 
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-sm  w-70 roxo">Avaliar quarto</button></form>
                             {% endif %}
                         {% endif %}
                     </td>

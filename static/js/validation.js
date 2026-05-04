@@ -33,12 +33,13 @@ input.addEventListener('input', function onInput() {
 
 
 
-const passwordInput = document.getElementById("password");
-const togglePasswordBtn = document.getElementById("togglePassword");
+$(".toggle-password").click(function() {
 
-togglePasswordBtn.addEventListener("click", () => {
-  const isPassword = passwordInput.type === "password";
-
-  passwordInput.type = isPassword ? "text" : "password";
-  togglePasswordBtn.textContent = isPassword ? "Esconder" : "Mostrar";
+  $(this).toggleClass("fa-eye fa-eye-slash");
+  var input = $($(this).attr("toggle"));
+  if (input.attr("type") == "password") {
+    input.attr("type", "text");
+  } else {
+    input.attr("type", "password");
+  }
 });
