@@ -223,4 +223,16 @@ def show_feedback_status():
     #item_feedback = Feedback.query.filter_by(idQuarto=booking.quarto.numero).all()
     #soma= sum(f.nota for f in item_feedback)
     #media=soma/total
-    return render_template('/admin/show_feedback_status.html',all_feedbacks=all_feedbacks)
+    labels = ['1', '2', '3', '4', '5']
+    #nivel_1=Feedback.query.filter_by(nota=1).count()
+    #nivel_2=Feedback.query.filter_by(nota=2).count()
+    #nivel_3=Feedback.query.filter_by(nota=3).count()
+    #nivel_4=Feedback.query.filter_by(nota=4).count()
+    #nivel_5=Feedback.query.filter_by(nota=5).count()
+    rooms = Quarto.query.all()
+    data = [Feedback.query.filter_by(nota=i).count() for  i in range (1,6)]
+
+    quarto = 302
+    data_quarto = [Feedback.query.filter_by(idQuarto=302,nota=i).count() for  i in range (1,6)]
+
+    return render_template('/admin/show_feedback_status.html',all_feedbacks=all_feedbacks,quarto=quarto,rooms=rooms,labels=labels, data=data,data_quarto=data_quarto)

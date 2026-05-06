@@ -1,10 +1,11 @@
 {%extends 'base.html'%}
 {% block title %}Feedback{% endblock %}
 {% block content %}
+ <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <h5 style="color:#7979e3">Feedback e estatísticas</h5>
 <div class="card p-3">
 <div class="table-responsive">
-     <table class="table table-hover mb-0" data-dynamic-table data-page-size="10">
+     <table class="table table-hover mb-0" data-dynamic-table data-page-size="5">
        <thead class="table-light">
         <tr>
         <th>Nº</th>
@@ -28,4 +29,67 @@
 </div>
 </div>
 
+<div style="height: 50vh; width: 50%;">
+        <canvas id="myChart"></canvas>
+    </div>
+ <div class="col-md-6">
+                                <label class="form-label">Exibir distribuição de classificações por quarto:</label>
+                                <select name="nota" class="form-select">
+                                 {% for room in rooms %}
+                                 <option value="{{room.value}}" >{{room.numero}}</option>
+                                 {% endfor %}
+                                </select>
+                                 <div style="height: 50vh; width: 50%;">
+        <canvas id="myChart2"></canvas>
+    </div>
+    </div>
+   
+ <script>
+        const labels = JSON.parse('{{ labels | tojson | safe }}');
+        const chartData = JSON.parse('{{ data | tojson | safe }}');
+
+        const data = {
+            labels: labels,
+            datasets: [{
+                label: 'Número de feedbacks por classificação (todos os quartos)',
+                backgroundColor: 'rgb(36, 127, 191)',
+                borderColor: 'rgb(36, 127, 191)',
+                data: chartData,
+            }]
+        };
+
+        const config = {
+            type: 'bar',
+            data: data,
+            options: { maintainAspectRatio: true }
+        };
+
+        const myChart = new Chart(
+            document.getElementById('myChart'),
+            config
+        );
+       
+        const chartData_quarto = JSON.parse('{{ data_quarto | tojson | safe }}');
+
+         const data_quarto = {
+            labels: labels,
+            datasets: [{
+                label: 'Número de feedbacks por classificação  (quarto nº{{quarto}})',
+                backgroundColor: 'rgb(36, 127, 191)',
+                borderColor: 'rgb(36, 127, 191)',
+                data: chartData_quarto,
+            }]
+        };
+
+        const config1 = {
+            type: 'bar',
+            data: data_quarto,
+            options: { maintainAspectRatio: true }
+        };
+
+        const myChart2 = new Chart(
+            document.getElementById('myChart2'),
+            config1
+        );
+    </script>
 {% endblock %}
