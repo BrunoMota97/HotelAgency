@@ -23,11 +23,11 @@ def dashboard():
 def update_request(req_id):
     sr = Pedido.query.get_or_404(req_id)
     new_status = request.form.get('status')
-
     if new_status in ['pendente', 'em_andamento', 'resolvido']:
         sr.estado = new_status
         sr.updated_at = datetime.now()
+        #sr.descricao="Feito"
         db.session.commit()
-        sr.description="Feito"
+        resposta = "Já vai a caminho"
         flash(f'Pedido nº{sr.id} mudado para "{new_status.replace("_", " ")}".', 'success')
-    return redirect(url_for('staff.dashboard'))
+        return redirect(url_for('staff.dashboard'))

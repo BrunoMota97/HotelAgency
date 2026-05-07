@@ -76,6 +76,7 @@ class Quarto(db.Model):
     #feedback = db.relationship("Feedback",back_populates="quarto",lazy=True)
 
 class Pedido(db.Model):
+    __tablename__ = "pedido"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     booking_id = db.Column(db.Integer, db.ForeignKey('reserva.id'), nullable=True)
@@ -85,7 +86,13 @@ class Pedido(db.Model):
     criado_em = db.Column(db.DateTime, default=datetime.now())
     updated_at = db.Column(db.DateTime, default=datetime.now(), onupdate=datetime.now())
 
-
+"""class Resposta(db.Model):
+    __tablename__ = "resposta"
+    id = db.Column(db.Integer, primary_key=True)
+    id_pedido= db.Column(db.Integer,db.ForeignKey('pedido.id'))
+    criado_em = db.Column(db.DateTime, default=datetime.now())
+    pedido = db.relationship("Pedido",back_populates="resposta")
+"""
 class Pagamento(db.Model):
     
 	id = db.Column(db.Integer, primary_key=True)
@@ -105,3 +112,40 @@ class Feedback(db.Model):
     nota = db.Column(db.Integer,nullable=False)
     idQuarto = db.Column(db.Integer,db.ForeignKey('quarto.id'),nullable=False)
     opiniao = db.Column(db.String(200))
+
+
+class Chat(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship('User', backref=db.backref('chats', lazy=True))
+    chat_list = db.Column(db.JSON, nullable=False, default=list)
+
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()
+
+
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.String(50), nullable=False, unique=True)
+    messages = db.relationship('ChatMessage', backref='message', lazy=True)
+
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()
+
+
+class ChatMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.String(400))
+    # timestamp = db.Column(db.TIMESTAMP, server_default=0db.func.current_timestamp(), nullable=False)
+    timestamp = db.Column(db.String(20), nullable=False)
+    sender_id = db.Column(db.Integer, nullable=False)
+    sender_username = db.Column(db.String(50), nullable=False)
+    room_id = db.Column(db.String(50), db.ForeignKey('messages.room_id'), nullable=False)
+
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()

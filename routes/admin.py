@@ -1,10 +1,11 @@
 import os
 import uuid
-from flask import Blueprint, render_template, redirect, url_for, flash, request,current_app
+from flask import Blueprint, session,render_template, redirect, url_for, flash, request,current_app
 from flask_login import login_required, current_user
-from models import db, Quarto, Reserva, User, Pedido, EstadoQuarto, EstadoReserva,Feedback
-from datetime import date
+from models import db, Quarto, Reserva, User, Pedido, EstadoQuarto, EstadoReserva,Feedback,Chat,Message,ChatMessage
+from datetime import date,datetime
 from werkzeug.utils import secure_filename
+import socket
 
 #import html
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -213,7 +214,7 @@ def update_room_status(room_id):
     flash(f'Estado do quarto nº {room.numero} atualizado.', 'success')
     return redirect(url_for('admin.rooms'))
 
-@admin_bp.route('/feedbacks')
+@admin_bp.route('/feedbacks',methods=['POST','GET'])
 @login_required
 def show_feedback_status():
 
@@ -229,10 +230,106 @@ def show_feedback_status():
     #nivel_3=Feedback.query.filter_by(nota=3).count()
     #nivel_4=Feedback.query.filter_by(nota=4).count()
     #nivel_5=Feedback.query.filter_by(nota=5).count()
-    rooms = Quarto.query.all()
+
+    numero=200
+    data_quarto=[]
     data = [Feedback.query.filter_by(nota=i).count() for  i in range (1,6)]
+    rooms = Quarto.query.all()
+    if request.method=='POST':
+      num = request.form['numero']
+      data_quarto = [Feedback.query.filter_by(idQuarto=num,nota=i).count() for  i in range (1,6)]
+      return render_template('/admin/show_feedback_status.html',all_feedbacks=all_feedbacks,num=num,rooms=rooms,labels=labels, data=data,data_quarto=data_quarto)
+    else:
+      return render_template('/admin/show_feedback_status.html',all_feedbacks=all_feedbacks,rooms=rooms,numero=numero,labels=labels, data=data,data_quarto=data_quarto)
 
-    quarto = 302
-    data_quarto = [Feedback.query.filter_by(idQuarto=302,nota=i).count() for  i in range (1,6)]
 
-    return render_template('/admin/show_feedback_status.html',all_feedbacks=all_feedbacks,quarto=quarto,rooms=rooms,labels=labels, data=data,data_quarto=data_quarto)
+
+@admin_bp.route("/new-chat", methods=["POST"])
+@login_required
+def new_chat():
+
+    user_id = current_user.id
+    new_chat_email = request.form["email"].strip().lower()
+
+    if new_chat_email == current_user.email:
+        return redirect(url_for("admin.chat"))
+  
+    recipient_user = User.query.filter_by(email=new_chat_email).first()
+    if not recipient_user:
+        return redirect(url_for("admin.chat"))
+    
+    existing_chat = Chat.query.filter_by(user_id=user_id).first()
+    if not existing_chat:
+        existing_chat = Chat(user_id=user_id, chat_list=[])
+        db.session.add(existing_chat)
+        db.session.commit()
+   
+    if recipient_user.id not in [user_chat["user_id"] for user_chat in existing_chat.chat_list]:
+        room_id = str(int(recipient_user.id) + int(user_id))[-4:]
+        # Add the new chat to the chat list of the current user
+        updated_chat_list = existing_chat.chat_list + [{"user_id": recipient_user.id, "room_id": room_id}]
+        existing_chat.chat_list = updated_chat_list
+
+        existing_chat.save_to_db()
+        recipient_chat = Chat.query.filter_by(user_id=recipient_user.id).first()
+        if not recipient_chat:
+            recipient_chat = Chat(user_id=recipient_user.id, chat_list=[])
+            db.session.add(recipient_chat)
+            db.session.commit()
+        updated_chat_list = recipient_chat.chat_list + [{"user_id": user_id, "room_id": room_id}]
+        recipient_chat.chat_list = updated_chat_list
+        recipient_chat.save_to_db()
+        # Create a new message entry for the chat room
+        new_message = Message(room_id=room_id)
+        db.session.add(new_message)
+        db.session.commit()
+    return redirect(url_for("admin.chat"))
+
+
+@admin_bp.route("/chat/", methods=["GET", "POST"])
+@login_required
+def chat():
+    room_id = request.args.get("rid", None)
+
+    current_user_id = current_user.id
+    current_user_chats = Chat.query.filter_by(user_id=current_user_id).first()
+    chat_list = current_user_chats.chat_list if current_user_chats else []
+
+    data = []
+    for chat in chat_list:
+        username = User.query.get(chat["user_id"]).username
+        is_active = room_id == chat["room_id"]
+        try:
+            message = Message.query.filter_by(room_id=chat["room_id"]).first()
+            last_message = message.messages[-1]
+            last_message_content = last_message.content
+        except (AttributeError, IndexError):
+            last_message_content = "This place is empty. No messages ..."
+        data.append({
+            "username": username,
+            "room_id": chat["room_id"],
+            "is_active": is_active,
+            "last_message": last_message_content,
+        })
+    messages = Message.query.filter_by(room_id=room_id).first().messages if room_id else []
+
+    return render_template("guest/chat.html", user_data=current_user, room_id=room_id, data=data, messages=messages )
+
+
+@admin_bp.app_template_filter("ftime")
+def ftime(date):
+    dt = datetime.fromtimestamp(int(date))
+    time_format = "%I:%M %p"  # Use  %I for 12-hour clock format and %p for AM/PM
+    formatted_time = dt.strftime(time_format)
+
+    formatted_time += " | " + dt.strftime("%m/%d")
+    return formatted_time
+
+
+@admin_bp.route('/get_name')
+def get_name():
+
+    data = {'name': ''}
+    if 'username' in session:
+        data = {'name': session['username']}
+    return jsonify(data)

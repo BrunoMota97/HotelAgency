@@ -21,6 +21,13 @@
                     <input type="hidden" name="status" value="em_andamento">
                     <button class="btn btn-sm  w-100" style="background-color:#7979e3;color:white">Enviar →</button>
                 </form>
+                <form action="" class="mt-2">
+                    <div class="mb-3">
+                    <label class="form-label">Descrição</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="Escrever resposta"></textarea>
+                </div>
+                    <button class="btn btn-sm  w-100" style="background-color:#7979e3;color:white">Responder</button>
+                </form>
             </div>
             {% else %}
             <p class="text-muted">Sem pedidos pendentes.</p>

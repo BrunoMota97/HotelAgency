@@ -64,7 +64,7 @@
             <div class="table-responsive">
                 <table class="table table-hover mb-0" >
                     <thead class="table-light">
-                        <tr><th>Numero</th><th>Tipo</th><th>Preço/Noite</th><th>Estado</th><th data-sortable="false">Mudar estado</th><th data-sortable="false">Ações</th></tr>
+                        <tr><th>Numero</th><th>Tipo</th><th>Preço/Noite</th><th>Classificação</th><th>Estado</th><th data-sortable="false">Mudar estado</th><th data-sortable="false">Ações</th></tr>
                     </thead>
                     <tbody>
                     {% for room in rooms %}
@@ -72,6 +72,11 @@
                         <td><strong>{{ room.numero }}</strong></td>
                         <td>{{ room.tipo.title() }}</td>
                         <td>{{ "%.2f"|format(room.preco_base) }} €</td>
+                        {% if (room.classificacao | round(1)) < 3 %}
+                        <td style="color:red">  {{room.classificacao | round(1)}}</td>
+                        {% else %}
+                        <td style="color: green">{{room.classificacao | round(1)}}</td>
+                        {% endif %}
                         <td>
                             <span class="badge bg-{{ 'success' if room.estado.value == 'disponivel' else 'danger' if room.estado.value == 'ocupado' else 'warning text-dark' }}">
                                 {{ room.estado.value }}

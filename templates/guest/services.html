@@ -37,11 +37,13 @@
                         <strong>{{ r.tipo.replace('_',' ').title() }}</strong>
                         <span class="text-muted ms-2" style="font-size:0.8rem;">{{ r.criado_em.strftime('%b %d, %H:%M') }}</span><br>
                         <small class="text-muted">{{ r.descricao or '—' }}</small>
+                       
                     </div>
                     <span class="badge  bg-{{ 'warning ' if r.estado == 'pendente' else 'success ' if r.estado == 'em_andamento' else 'resolvido' }}">
                         {{ r.estado.replace('_',' ') }}
                     </span>
                 </div>
+                
                 {% endfor %}
             {% else %}
                 <p class="text-muted">Sem pedidos efetuados.</p>

@@ -2,7 +2,7 @@ from __future__ import annotations
 from flask import Flask,g,abort,session,request
 from flask_login import LoginManager
 from config import Config
-from models import db, bcrypt, User
+from models import db, bcrypt, User,Message,ChatMessage
 from routes.auth import auth_bp
 from routes.guest import guest_bp
 from routes.staff import staff_bp
@@ -14,8 +14,14 @@ from datetime import timedelta
 from security import init_security
 from functools import wraps
 from logging.handlers import RotatingFileHandler
+from flask_socketio import emit, join_room, leave_room
+from flask_socketio import SocketIO
+from flask_cors import CORS
+cors = CORS()
 
+import socket
 
+socket = SocketIO()
 from flask_wtf import FlaskForm, CSRFProtect
 
 csrf = CSRFProtect()
@@ -27,6 +33,7 @@ LOGIN_LOCKOUT = timedelta(minutes=10)
 
 def create_app():
     app = Flask(__name__)
+    socket.init_app(app, cors_allowed_origins="*")
     csrf.init_app(app)
 
     app.config["ESPACO_IMAGEM_DEFAULT"] = "img/HotelAgency.png"
@@ -111,13 +118,70 @@ def create_app():
         if User.query.count() == 0:
             from seed import seed_db
             seed_db()
+    
 
-    return app
+    
+    @socket.on("join-chat")
+    def join_private_chat(data):
+      room = data["rid"]
+      join_room(room=room)
+      socket.emit(
+        "joined-chat",
+        {"msg": f"{room} is now online."},
+        room=room,
+        # include_self=False,
+      )
 
 
-app = create_app()
+# Outgoing event handler
+    @socket.on("outgoing")
+    def chatting_event(json, methods=["GET", "POST"]):
+
+      room_id = json["rid"]
+      timestamp = json["timestamp"]
+      message = json["message"]
+      sender_id = json["sender_id"]
+      sender_username = json["sender_username"]
+
+    # Get the message entry for the chat room
+      message_entry = Message.query.filter_by(room_id=room_id).first()
+
+    # Add the new message to the conversation
+      chat_message = ChatMessage(
+        content=message,
+        timestamp=timestamp,
+        sender_id=sender_id,
+        sender_username=sender_username,
+        room_id=room_id,
+      )
+    # Add the new chat message to the messages relationship of the message
+      message_entry.messages.append(chat_message)
+
+    # Updated the database with the new message
+      try:
+        chat_message.save_to_db()
+        message_entry.save_to_db()
+      except Exception as e:
+        # Handle the database error, e.g., log the error or send an error response to the client.
+        print(f"Error saving message to the database: {str(e)}")
+        db.session.rollback()
+
+    # Emit the message(s) sent to other users in the room
+      socket.emit(
+        "message",
+        json,
+        room=room_id,
+        include_self=False,
+      )
+
+    return app,socket
+
+app, socket = create_app()
+
 
 if __name__ == '__main__':
-    debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
-    create_app().run(debug=debug_mode)
+    #debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
+    #create_app().run(debug=debug_mode)
+    #create_app().run(debug=True)
+    socket.run(app, allow_unsafe_werkzeug=True, debug=True)
 
