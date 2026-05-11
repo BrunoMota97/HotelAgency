@@ -133,9 +133,7 @@ body.landing-page {
   min-height: 620px;
   border-radius: 36px;
   overflow: hidden;
-  background:
-    
-    url("../img/palacio_Duhau_de_frente.png") center/cover no-repeat;
+  background:  url("../img/palacio_Duhau_de_frente.png") center/cover no-repeat;
   box-shadow: 0 28px 70px rgba(192, 134, 251, 0.8);
   display: flex;
   align-items: stretch;

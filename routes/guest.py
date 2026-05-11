@@ -175,14 +175,17 @@ def give_feedback(booking_id):
      room = Quarto.query.get(booking.idQuarto)
      total = Feedback.query.filter_by(idQuarto=booking.quarto.numero).count()
      item_feedback = Feedback.query.filter_by(idQuarto=booking.quarto.numero).all()
-     soma= sum(f.nota for f in item_feedback)
+     soma= sum(f.nota for f in item_feedback) +int(nota)
+     
      if total==0:
         room.classificacao=nota
+        total+=1
      else:
-        media=soma/total
-        room.classificacao = round(media,2)
+        media=soma/(total+1)
+        room.classificacao = round(media,1)
      db.session.add(feedback)
      db.session.commit()
+
      flash("Opinião submetida com sucesso!","success")
      return redirect(url_for('guest.dashboard'))
  return render_template('guest/feedback.html',booking=booking,room=room)

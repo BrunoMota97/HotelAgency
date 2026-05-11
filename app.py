@@ -2,7 +2,7 @@ from __future__ import annotations
 from flask import Flask,g,abort,session,request
 from flask_login import LoginManager
 from config import Config
-from models import db, bcrypt, User,Message,ChatMessage
+from models import db, bcrypt, User,Mensagem,ChatMessage
 from routes.auth import auth_bp
 from routes.guest import guest_bp
 from routes.staff import staff_bp
@@ -17,6 +17,10 @@ from logging.handlers import RotatingFileHandler
 from flask_socketio import emit, join_room, leave_room
 from flask_socketio import SocketIO
 from flask_cors import CORS
+from flask_mail import Mail, Message
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
 cors = CORS()
 
 import socket
@@ -30,9 +34,15 @@ LOGIN_MAX_ATTEMPTS = 3
 LOGIN_WINDOW = timedelta(minutes=5)
 LOGIN_LOCKOUT = timedelta(minutes=10)
 
-
 def create_app():
     app = Flask(__name__)
+
+    limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,  # Use IP address as the rate limiting key
+    default_limits=["200 per day", "40 per hour"]  # Default limits
+    )
+    
     socket.init_app(app, cors_allowed_origins="*")
     csrf.init_app(app)
 
@@ -52,13 +62,20 @@ def create_app():
     app.config["SESSION_COOKIE_SECURE"] = production
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)
 
+    app.config['MAIL_SERVER'] = 'smtp.mail.yahoo.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USERNAME'] = ''  # Update with your email
+    app.config['MAIL_PASSWORD'] = ''  # Update with your password or app password
+    app.config['MAIL_DEFAULT_SENDER'] = ('HotelAgency', '')
 
+    mail = Mail(app)
+    
     app.config.from_object(Config)
 
     db.init_app(app)
     os.makedirs(app.config["ESPACOS_IMG_UPLOAD_FOLDER"], exist_ok=True)
     bcrypt.init_app(app)
-    #app.jinja_env.globals["csrf_token"] = get_csrf_token
 
     login_manager = LoginManager(app)
     login_manager.login_view = 'auth.login'
@@ -79,8 +96,7 @@ def create_app():
       if not form_token or not session_token or not secrets.compare_digest(form_token, session_token):
         abort(400, description="Invalid CSRF token.")
 
-
-    
+ 
     @app.after_request
     def set_security_headers(response):
         # SECURITY: browser protections.
@@ -88,20 +104,20 @@ def create_app():
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
-        #response.headers["Content-Security-Policy"] = (
-        #    "default-src 'self'; "
-        #    "style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; "
-        #    "script-src 'self' https://cdn.jsdelivr.net; "
-        #    "img-src 'self' data:; "
-        #    "object-src 'none'; "
-        #    "base-uri 'self'; "
-        #    "frame-ancestors 'none'"
-        #)
+        """response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "connect-src 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css';"
+           "style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; "
+           "script-src 'self' https://cdn.jsdelivr.net; "
+            "img-src 'self' data: ; "
+            "object-src 'none'; "
+           "base-uri 'self'; "
+            "frame-ancestors 'none'"
+        )"""
         if production:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
     
-
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -114,13 +130,11 @@ def create_app():
 
     with app.app_context():
         db.create_all()
-        # Auto-seed if database is empty (e.g. fresh Render deployment)
         if User.query.count() == 0:
             from seed import seed_db
             seed_db()
     
 
-    
     @socket.on("join-chat")
     def join_private_chat(data):
       room = data["rid"]
@@ -131,7 +145,6 @@ def create_app():
         room=room,
         # include_self=False,
       )
-
 
 # Outgoing event handler
     @socket.on("outgoing")
@@ -144,7 +157,7 @@ def create_app():
       sender_username = json["sender_username"]
 
     # Get the message entry for the chat room
-      message_entry = Message.query.filter_by(room_id=room_id).first()
+      message_entry = Mensagem.query.filter_by(room_id=room_id).first()
 
     # Add the new message to the conversation
       chat_message = ChatMessage(
@@ -166,7 +179,6 @@ def create_app():
         print(f"Error saving message to the database: {str(e)}")
         db.session.rollback()
 
-    # Emit the message(s) sent to other users in the room
       socket.emit(
         "message",
         json,

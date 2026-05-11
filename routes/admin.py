@@ -1,16 +1,17 @@
 import os
 import uuid
-from flask import Blueprint, session,render_template, redirect, url_for, flash, request,current_app
+from flask import Flask,Blueprint, session,render_template, redirect, url_for, flash, request,current_app,send_from_directory
 from flask_login import login_required, current_user
-from models import db, Quarto, Reserva, User, Pedido, EstadoQuarto, EstadoReserva,Feedback,Chat,Message,ChatMessage
+from models import db, Quarto, Reserva, User, Pedido, EstadoQuarto, EstadoReserva,Feedback,Chat,Mensagem,ChatMessage
 from datetime import date,datetime
 from werkzeug.utils import secure_filename
 import socket
+import re
 
 #import html
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
-EXTENSOES_IMAGEM_PERMITIDAS = {"png", "jpg", "jpeg", "gif", "webp"}
+EXTENSOES_IMAGEM_PERMITIDAS = {"png", "jpg", "jpeg", "gif", "webp", "jfif","avif"}
 
 """
 def admin_required(view):
@@ -219,29 +220,19 @@ def update_room_status(room_id):
 def show_feedback_status():
 
     all_feedbacks = Feedback.query.all()
-    #booking = Reserva.query.filter_by(id=booking_id, idUser=current_user.id).first_or_404()
-    #total = Feedback.query.filter_by(idQuarto=Reserva.quarto.numero).count()
-    #item_feedback = Feedback.query.filter_by(idQuarto=booking.quarto.numero).all()
-    #soma= sum(f.nota for f in item_feedback)
-    #media=soma/total
+
     labels = ['1', '2', '3', '4', '5']
-    #nivel_1=Feedback.query.filter_by(nota=1).count()
-    #nivel_2=Feedback.query.filter_by(nota=2).count()
-    #nivel_3=Feedback.query.filter_by(nota=3).count()
-    #nivel_4=Feedback.query.filter_by(nota=4).count()
-    #nivel_5=Feedback.query.filter_by(nota=5).count()
 
     numero=200
     data_quarto=[]
     data = [Feedback.query.filter_by(nota=i).count() for  i in range (1,6)]
-    rooms = Quarto.query.all()
+    rooms = Quarto.query.order_by(Quarto.numero).all()
     if request.method=='POST':
       num = request.form['numero']
       data_quarto = [Feedback.query.filter_by(idQuarto=num,nota=i).count() for  i in range (1,6)]
       return render_template('/admin/show_feedback_status.html',all_feedbacks=all_feedbacks,num=num,rooms=rooms,labels=labels, data=data,data_quarto=data_quarto)
     else:
       return render_template('/admin/show_feedback_status.html',all_feedbacks=all_feedbacks,rooms=rooms,numero=numero,labels=labels, data=data,data_quarto=data_quarto)
-
 
 
 @admin_bp.route("/new-chat", methods=["POST"])
@@ -280,7 +271,7 @@ def new_chat():
         recipient_chat.chat_list = updated_chat_list
         recipient_chat.save_to_db()
         # Create a new message entry for the chat room
-        new_message = Message(room_id=room_id)
+        new_message = Mensagem(room_id=room_id)
         db.session.add(new_message)
         db.session.commit()
     return redirect(url_for("admin.chat"))
@@ -300,21 +291,30 @@ def chat():
         username = User.query.get(chat["user_id"]).username
         is_active = room_id == chat["room_id"]
         try:
-            message = Message.query.filter_by(room_id=chat["room_id"]).first()
+            message = Mensagem.query.filter_by(room_id=chat["room_id"]).first()
             last_message = message.messages[-1]
             last_message_content = last_message.content
         except (AttributeError, IndexError):
-            last_message_content = "This place is empty. No messages ..."
+            last_message_content = "Sem mensagens ainda."
         data.append({
             "username": username,
             "room_id": chat["room_id"],
             "is_active": is_active,
             "last_message": last_message_content,
         })
-    messages = Message.query.filter_by(room_id=room_id).first().messages if room_id else []
+    messages = Mensagem.query.filter_by(room_id=room_id).first().messages if room_id else []
 
     return render_template("guest/chat.html", user_data=current_user, room_id=room_id, data=data, messages=messages )
 
+
+
+@admin_bp.route("/chat/<int:message_id>/delete", methods=["GET", "POST"])
+@login_required
+def delete_message(message_id):
+    message = ChatMessage.query.get_or_404(message_id)
+    db.session.delete(message)
+    db.session.commit()
+    return redirect(url_for("admin.chat"))
 
 @admin_bp.app_template_filter("ftime")
 def ftime(date):

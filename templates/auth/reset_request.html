@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="pt">
   <head>
@@ -24,7 +23,7 @@
             alt="Logo EasySport"
           />
           <p class="auth-eyebrow">Plataforma de reservas de hotelaria</p>
-          <h1>Entrar na conta</h1>
+          <h1>Recuperação da conta</h1>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=True) %}
@@ -40,30 +39,18 @@
           {% endif %}
         {% endwith %}
 
-        <form class="auth-form" action="/login" method="post" data-custom-validation="true" data-validation-stack-class="auth-messages flash-stack" data-validation-alert-class="auth-alert auth-alert--danger flash-message">
+        <form class="auth-form" action="/reset_password_request" method="post" data-custom-validation="true" data-validation-stack-class="auth-messages flash-stack" data-validation-alert-class="auth-alert auth-alert--danger flash-message">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <div class="auth-field">
-            <label for="email">Username ou email</label>
-            <input id="email" type="text" name="email" placeholder="Username ou email" autocomplete="off" required />
+            <label for="email">Email</label>
+            <input id="email" type="text" name="email" placeholder="Introduza o seu email" autocomplete="off" required />
           </div>
     
-          <div class="auth-field">
-            <label for="password">Password</label>
-            
-            <input id="password-field" type="password" name="password" placeholder="Password" class="form-control" required/>
-             <span toggle="#password-field" class="fa fa-fw fa-eye field-icon toggle-password"></span>
-
-            
-          </div>
-
-          <button class="auth-button" type="submit">Login</button>
+          <button class="auth-button" type="submit">Resetar a passe</button>
         </form>
-
         <div class="auth-links">
           <a href="/landing">Voltar ao início</a>
-          <a href="/register">Criar conta</a>
           <div class="border-top pt-3">
-        <a href="{{ url_for('auth.reset_request') }}">Esqueceu da passe?</a>
        </div>
         </div>
       </section>
@@ -71,5 +58,6 @@
     <script src="{{ url_for('static', filename='js/flash-messages.js') }}"></script>
   </body>
 </html>
+
 
 

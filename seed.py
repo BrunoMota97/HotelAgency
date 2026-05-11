@@ -2,11 +2,6 @@ from models import db, User, Quarto
 
 
 def seed_db():
-    #users = [
-    #    User(name='Dave Admin', username='admin',email='admin@hotel.com', role='admin',password='admin123'),
-    #]
-    #for u in users:
-    #    db.session.add(u)
 
     """rooms = [
         Quarto(numero='101', tipo='singular', preco_base=80, descricao='Quarto singular com visão sobre a cidade'),

@@ -30,6 +30,7 @@
       {% endwith %}
 
       <header class="landing-header">
+        
           <img
             class="landing-brand__logo"
             src="{{ url_for('static', filename='img/HotelAgency.png') }}"
@@ -52,7 +53,9 @@
       </header>
 
       <main>
-        
+                  {% for image in images %}
+               <img src="image" >  
+            {% endfor %}
         <section class="landing-hero">
             
           <div class="landing-hero__overlay">
@@ -60,9 +63,12 @@
             <p class="landing-hero__eyebrow">Reserva desportiva de quartos</p>
                
             <h2>Encontre o seu quarto ideal.</h2>
+            
             <p class="landing-hero__text">
+              
               Uma plataforma pensada para consultar quartos, gerir pagamentos, tudo de forma simples.
             </p>
+
             <a class="landing-button landing-button--hero" href="{{ url_for('guest.book') }}">
               Ver quartos.
             </a>

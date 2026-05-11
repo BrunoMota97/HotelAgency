@@ -4,7 +4,9 @@ from flask_bcrypt import Bcrypt
 from datetime import datetime
 from pytz import timezone
 import enum
-
+import secrets
+from datetime import datetime, timedelta
+from werkzeug.security import generate_password_hash, check_password_hash
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 
@@ -37,14 +39,28 @@ class User(UserMixin, db.Model):
     reservas = db.relationship("Reserva", back_populates="user", lazy=True)
     pedidos = db.relationship("Pedido", backref='requester', lazy=True)
     pagamentos = db.relationship("Pagamento", back_populates="user", lazy=True)
-
-
-    def set_password(self, passe):
-        self.password = bcrypt.generate_password_hash(passe).decode('utf-8')
-       
+    reset_token = db.Column(db.String(100), nullable=True)
+    reset_token_expiry = db.Column(db.DateTime, nullable=True)
 
     def check_password(self, passe):
-        return bcrypt.check_password_hash(self.password, passe)
+        return check_password_hash(self.password, passe)
+
+
+    def set_reset_token(self):
+
+        self.reset_token = secrets.token_urlsafe(32)
+        self.reset_token_expiry = datetime.utcnow() + timedelta(hours=3)
+        return self.reset_token
+    
+    def verify_reset_token(self, token):
+        """Verify if the reset token is valid and not expired"""
+        if token != self.reset_token:
+            return False
+        if datetime.utcnow() > self.reset_token_expiry:
+            return False
+        return True
+
+
 
 class Reserva(db.Model):
     __tablename__ = "reserva"
@@ -126,11 +142,11 @@ class Chat(db.Model):
 
 
 
-class Message(db.Model):
+class Mensagem(db.Model):
     __tablename__ = 'messages'
     id = db.Column(db.Integer, primary_key=True)
     room_id = db.Column(db.String(50), nullable=False, unique=True)
-    messages = db.relationship('ChatMessage', backref='message', lazy=True)
+    messages = db.relationship('ChatMessage', backref='mensagem', lazy=True)
 
     def save_to_db(self):
         db.session.add(self)

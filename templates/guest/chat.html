@@ -21,7 +21,7 @@
         <div class="inbox_people">
           <div class="headind_srch">
             <div class="recent_heading">
-              <h4>Recent</h4>
+              <h4>HotelAgency Chat</h4>
             </div>
             <div class="srch_bar">
               <div class="stylish-input-group">
@@ -64,7 +64,11 @@
               {% if j.sender_username==user_data["username"] %}
               <div class="outgoing_msg" id="{{ j.timestamp }}">
                 <div class="sent_msg">
-                  <p>{{ j.content }}</p>
+                 <form action="{{url_for('admin.delete_message',message_id=j.id)}}">
+                  <button  type="submit" class="btn btn-sm  w-70 roxo"><i class="bi bi-dot"></i>Eliminar</button>
+                  </form> 
+                          <p>{{ j.content }} </p>
+                 
                   <span class="time_date">{{ j.timestamp | ftime }}</span>
                 </div>
               </div>
@@ -74,6 +78,7 @@
                 </div>
                 <div class="received_msg">
                   <div class="received_withd_msg">
+                    
                     <p>{{ j.content }}</p>
                     <span class="time_date">{{ j.timestamp | ftime }}</span>
                   </div>
@@ -86,8 +91,8 @@
             <div class="input_msg_write">
               <form id="chat_form">
                 <input type="text" class="message" placeholder="Escrever mensagem..." />
-                <button class="msg_send_btn" type="submit">
-                  <i class="fa fa-paper-plane-o" aria-hidden="true"></i>
+                <button type="submit" class="btn w-80" style="background-color:#7979e3;color:white;border:#7979e3"> Enviar
+                 
                 </button>
               </form>
             </div>
@@ -206,3 +211,4 @@
 </body>
 </html>
 {% endblock %}
+-->
