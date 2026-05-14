@@ -17,3 +17,5 @@ tentativas de login e logout por inatividade.
 
 
 ![forest](imagens/feedback1.PNG)
+
+![forest](imagens/reembolsospagamentos.PNG)
