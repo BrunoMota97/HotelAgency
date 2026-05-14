@@ -14,3 +14,6 @@ tentativas de login e logout por inatividade.
 
 
 ![forest](imagens/estatisticas.PNG)
+
+
+![forest](imagens/feedback1.PNG)
