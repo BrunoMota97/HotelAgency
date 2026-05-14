@@ -10,5 +10,5 @@ O projeto consiste num sistema de reserva de quartos de uma unidade hoteleira. O
 Já no que toca à parte da autenticação: como a segurança é um tema muito importante, temos encriptação de password, bloqueio de conta durante x minutos após 3 
 tentativas de login e logout por inatividade.
 
-![forest](https://github.com/BrunoMota97/HotelAgency/blob/main/fatura_1.png)
+![forest](imagens/chat.PNG)
 
